@@ -1,0 +1,8 @@
+This application is designed to visualise clerics data using several R packages. There are several tabs, each dedicated to a specific measure, on which data is subsetted.
+
+There are two measures: Nodal degree and Centrality degree. 
+
+Nodal degree refers to the number of nodes that are adjacent to a particular node. Nodes are also called vertices. 
+Nodal degree are simple and easy to calculate, yet it is a very informative measure in social network theory. Nodal degree allows us to understand how well-connected a given node is. 
+
+

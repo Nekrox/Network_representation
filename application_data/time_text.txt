@@ -1,0 +1,2 @@
+This tab allows to choose a time frame and inspect the priest networks in the given time period. In order to start, please select a start and end date for the time frame of your desire. 
+
