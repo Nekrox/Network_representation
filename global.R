@@ -12,9 +12,14 @@ updt_full_data <- read.csv(file = 'clean_updt_full_data.csv')
 # updt_full_edge_list <- read.csv(file = 'upd_full_edge_list.csv')
 
 # Defining strings 
-PROMT_SUB_G <- "You can choose which connected sub-graph to visualize. For the current subset of data there are "
+PROMT_SUB_G_P1 <- "You can choose which connected sub-graph to visualize. For the 
+current subset of data there are "
+PROMT_SUB_G_P2 <- "subgraphs. Please note that they are ordered by the amount of nodes in the decreasing
+order. "
 HELP_STR <- "Note: to see the node information click on any node on the right."
 LINK_STR <- "https://clericus.ie/person/"
+NO_DATA_STR <- "There is not enough data in the current time frame selection to 
+represent a network. Please select another timeline."
 FIXED_INTERVAL <- 10
 # Loading text files for the app
 general_info_p <- paste(readLines("general_p_text.txt"), collapse = "\n")
@@ -81,9 +86,6 @@ create_sj_indiv <- function(selected_node_id) {
   return(indv_sj_list)
 }
 
-
-
-
 time_frame_decomposed_creation <- function(st_y, end_y) {
   
   selected_tf_df <<- subset(updt_full_data, event.start.date >= st_y & event.start.date <= end_y)
@@ -94,12 +96,19 @@ time_frame_decomposed_creation <- function(st_y, end_y) {
   # construct a decomposed graph time frame object
 
   # Preparing a graph object for the selected file (which will be held on the server and called based on user input)
-  graph_object <- graph_from_data_frame(tf_edge_list, directed = FALSE, vertices = NULL)
-  tf_decomposed_g <- decompose.graph(graph_object)
-  # sort it by the amount of nodes. 
-  tf_node_counts <- sapply(tf_decomposed_g, vcount)
-  tf_decomposed_g_ordered <- tf_decomposed_g[order(unlist(tf_node_counts), decreasing = TRUE)]
-  return(tf_decomposed_g_ordered)
+  time_f_graph_object <- graph_from_data_frame(tf_edge_list, directed = FALSE, vertices = NULL)
+  
+  if (length(time_f_graph_object) > 1) {
+    tf_decomposed_g <- decompose.graph(time_f_graph_object)
+    # sort it by the amount of nodes. 
+    tf_node_counts <- sapply(tf_decomposed_g, vcount)
+    tf_decomposed_g_ordered <- tf_decomposed_g[order(unlist(tf_node_counts), decreasing = TRUE)]
+    return(tf_decomposed_g_ordered)
+  } else {
+    empty_graph <- decompose.graph(graph.empty())
+    return(empty_graph)
+  }
+  
 } 
 
 
