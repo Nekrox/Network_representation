@@ -118,13 +118,7 @@ time_frame_decomposed_creation <- function(st_y, end_y) {
 
 create_tf_sj_object <- function(tf_sub_gr_number) {
   
-  print(tf_sub_gr_number)
-  
-  # if (is.null(tf_sub_gr_number)) {
-  #   tf_sub_gr_number = 1
-  # }
-  # cat("INSIDE THE CREATE_TF_FUNC:", tf_sub_gr_number, "\n")
-  current_tf_subgraph <- time_frame_decomposed_g[[tf_sub_gr_number]] # Selects a subgraph chosen by the user
+  current_tf_subgraph <- time_frame_decomposed_g[[tf_sub_gr_number]]
   tf_members <- membership(cluster_walktrap(current_tf_subgraph, steps = 1))
   tf_sj_list <- igraph_to_networkD3(current_tf_subgraph, group = tf_members)
   return(tf_sj_list)
@@ -135,7 +129,6 @@ nodeOnClickInfo_func <- function(information_object) {
   str_id <- paste("Node ID: ", information_object$node.ID[1])
   str_name <- paste("Name: ", information_object$node.name[1])
   str_type <- paste("Participated in: ", nrow(information_object), " event(s).")
-  
   return(HTML(paste(str_id, str_name, str_type, sep = '<br/>')))
 }
 
@@ -148,7 +141,6 @@ present_network_stat_func <- function(current_sub_g_n, decom_object) {
   clust_coef <- sprintf("%.2f", transitivity(current_c_subgraph))
   mean_dist <- sprintf("%.2f", mean_distance(current_c_subgraph))
   
-  # print(length(current_c_subgraph))
   dens_str <- paste("Density: ", density_v)
   
   if (clust_coef == "NaN") {
@@ -164,13 +156,6 @@ present_network_stat_func <- function(current_sub_g_n, decom_object) {
 
 }
 
-
-
-
-
-
-
-
 egocentricNetwork_func <- function(selected_node_id, given_script) {
   
 
@@ -178,15 +163,7 @@ egocentricNetwork_func <- function(selected_node_id, given_script) {
   # create a data frame for individual network representation
   indv_unq_n <- unique(c(egocentric_edge_l$A, egocentric_edge_l$B))
   selected_indv_n_df <<- full_data_set[full_data_set$node.ID %in% indv_unq_n,]
-  # Another edge_list consturction
-  # ego_n_list <- egocentric_edge_l$B
-  # other_e_nodes_edge_l <- full_edge_list[full_edge_list$A %in% egocentric_edge_l$B 
-  #                                        & full_edge_list$B %in% egocentric_edge_l$B,]
-  # 
-  # ego_centric_edge_list <- rbind(egocentric_edge_l,other_e_nodes_edge_l)
-  
-  
-  
+
   g_o <- graph_from_data_frame(egocentric_edge_l, directed = FALSE, vertices = NULL)
   m <- membership(cluster_walktrap(g_o, steps = 1))
   indv_sj_list <- igraph_to_networkD3(g_o, group = m)

@@ -144,7 +144,7 @@ server <- shinyServer(function(input, output, session) {
           helpText(div(paste0(PROMT_SUB_G_P1, length(decomposed_g), PROMT_SUB_G_P2), 
                        style = "color: #888FF; font-size: 18px;")),
           
-          selectInput("selectInput_changed", "Select a subgraph:", choices = 1:length(decomposed_g)),
+          selectInput("selectInput_changed", "Select a subgraph:", selected = 2, choices = 1:length(decomposed_g)),
           
           # present statistics for the current sub graph
           h2(style = "color: #8675A9", "Network summary statistics:"),
@@ -203,8 +203,6 @@ server <- shinyServer(function(input, output, session) {
       fluidRow(helpText(div(NO_DATA_STR), style = "color: #888FF; font-size: 18px;"))
     } else {
       
-      # updateSelectInput(session, "tf_g_number_selectI_changed", choices = 1:length(time_frame_decomposed_g))
-      # Previously I was updating it here, but then I changed "selectedInput" and put choices directly with time_frame_decomposed_g
       fluidRow(
         # style = "margin: 20px; padding: 0px;",
         sidebarLayout(
@@ -212,23 +210,20 @@ server <- shinyServer(function(input, output, session) {
             
             helpText(div(paste0(PROMT_SUB_G_P1, length(time_frame_decomposed_g), PROMT_SUB_G_P2), 
                          style = "color: #888FF; font-size: 18px;")),
-          
-            
+        
             selectInput("tf_g_number_selectI_changed", "Select a subgraph:", selected = 2, choices = 1:length(time_frame_decomposed_g)),
-            cat("Strait after selectInput:", input$tf_g_number_selectI_changed, "\n"),
+
             
             
             # present statistics for the current sub graph
             h2(style = "color: #8675A9", "Network summary statistics:"),
             htmlOutput("current_sub_g_tf_statistics", class = "text_custom_class"),
             helpText("Explanation of every statistics can be found in general tab"),
-            
-            
+            # present Node information
             h2(style = "color: #8675A9", "Node information:"),
             helpText(HELP_STR),
-            htmlOutput("selected_time_frame_info", class = "text_custom_class"),
+            htmlOutput("selected_tf_node_info", class = "text_custom_class"),
             uiOutput("time_personal_link_button", class = "small_margin_class"),
-            uiOutput("indv_net_pressed", class = "small_margin_class"),
             
           ), # End of the sidebarPanel 
           
@@ -345,7 +340,7 @@ server <- shinyServer(function(input, output, session) {
     time_url <<- paste(LINK_STR, time_n_info$node.ID[1], sep = "")
     time_s_node <<- time_n_info$node.ID[1]
     
-    output$selected_time_frame_info <- renderText({ 
+    output$selected_tf_node_info <- renderText({ 
       nodeOnClickInfo_func(time_n_info)
     })
     
@@ -419,11 +414,6 @@ server <- shinyServer(function(input, output, session) {
   })
   
   output$current_sub_g_tf_statistics <- renderText({ 
-    # here input tf g number was NULL
-    # if (is.null(input$tf_g_number_selectI_changed)) {
-    #   input$tf_g_number_selectI_changed = 1
-    # }
-    
     present_network_stat_func(as.integer(input$tf_g_number_selectI_changed), time_frame_decomposed_g)
   })
   
@@ -440,44 +430,6 @@ shinyApp(ui, server)
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  # TIMEFRAME EGOCENTRIC
-  # output$individual_tf_network_viz <- renderForceNetwork({
-  #   
-  #   # sj_indiv <- create_sj_indiv(as.integer(input$node_clicked))
-  #   # ind_script <- 'Shiny.onInputChange("ind_node_clicked", d.name)'
-  #   # 
-  #   # forceNetwork(Links = sj_indiv$links, Nodes = sj_indiv$nodes, Source = "source",
-  #   #              Target = "target", NodeID = "name", Group = "group",
-  #   #              opacity = 1, zoom = T, fontSize = 0, linkDistance = 150, clickAction = ind_script
-  #   # )
-  #   
-  #   # egocentricNetwork_func(as.integer(input$node_clicked))
-
-  #   
-  # })
-  
-  
-  # observeEvent(input$tabs, {
-  #   print("hello")
-  #   session$reload()
-  # })
-  
-  
   
   
   
