@@ -1,8 +1,17 @@
-This application is designed to visualise clerics data using several R packages. There are several tabs, each dedicated to a specific measure, on which data is subsetted.
+This application is designed to visualise clerics data using several R packages. There are two tabs dedicated to the network representation: “Nodal Degree” and “Time Frame”. 
 
-There are two measures: Nodal degree and Centrality degree. 
+The first one is designed to subset the data based on the nodal degree measure. Nodal degree refers to the number of nodes that are adjacent to a particular node. Note that nodes are sometimes called vertices. Nodal degree are simple and relatively easy to calculate. However, it is a very informative measure in social network theory since it allows us to understand how active a given node is. In another words, the higher nodal degree of a particular vertex (where each vertex represent a unique priest), the more connections the person had. 
 
-Nodal degree refers to the number of nodes that are adjacent to a particular node. Nodes are also called vertices. 
-Nodal degree are simple and easy to calculate, yet it is a very informative measure in social network theory. Nodal degree allows us to understand how well-connected a given node is. 
+It should be mentioned that for the purposes of  representation a vast amount of data, it was decided that only part of the data can be selected in the Nodal Degree tab. 
+
+After selecting the percentage of the data you will be presented with the most common graph statistics:
+
+Density:
+This measure is used to understand how ____. It is calculated as number of existing connections (edges) divided by the number of all possible connections in the graph. It ranges from 0 (no ties exist) to 1 (all possible ties exist).
+
+Clustering coefficient:
+
+Mean distance: 
 
 
+Diameter: 
