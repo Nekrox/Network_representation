@@ -1,17 +1,18 @@
 This application is designed to visualise clerics data using several R packages. There are two tabs dedicated to the network representation: “Nodal Degree” and “Time Frame”. 
+The first page is designed to subset the data based on the nodal degree measure. Nodal degree refers to the number of nodes that are adjacent to a particular node. Note that nodes are sometimes called vertices. Nodal degrees are simple and relatively easy to calculate. However, it is a very informative measure in social network theory since it allows us to understand how active a given node is. In case of this data, each node represents a unique priest. Therefore, the higher nodal degree of a particular vertex is, the more connections the priest has. 
 
-The first one is designed to subset the data based on the nodal degree measure. Nodal degree refers to the number of nodes that are adjacent to a particular node. Note that nodes are sometimes called vertices. Nodal degree are simple and relatively easy to calculate. However, it is a very informative measure in social network theory since it allows us to understand how active a given node is. In another words, the higher nodal degree of a particular vertex (where each vertex represent a unique priest), the more connections the person had. 
-
-It should be mentioned that for the purposes of  representation a vast amount of data, it was decided that only part of the data can be selected in the Nodal Degree tab. 
-
-After selecting the percentage of the data you will be presented with the most common graph statistics:
+It should be mentioned that the entire data set is too big to be represented in one single network. In order to provide more meaningful representation, it was decided to subset data based on the nodal degree and express it as a percentage of the data. Lower percentage mean higher degree for the selected nodes . Since most of the resulting networks consisted of multiple connected graphs, each network was further divided into sub-graphs. Each sub-graph can be selected for detailed examination. After selecting the percentage of the data, the first sub-graph will be automatically shown.  In addition, the most common graph statistics will be provided for the given sub-graph:
 
 Density:
-This measure is used to understand how ____. It is calculated as number of existing connections (edges) divided by the number of all possible connections in the graph. It ranges from 0 (no ties exist) to 1 (all possible ties exist).
+This measure is used to understand the social interactions and the structure of the network.
+Higher density usually indicate that higher level of cooperation or that members are more united. In contrast, lower values usually mean that the network is more fractured and contains disconnected groups. This statistic is calculated as number of existing connections (edges) divided by the number of all possible connections in the graph. It ranges from 0 (no ties exist) to 1 (all possible ties exist).
 
 Clustering coefficient:
+Also known as “CC”, it represents how tightly group the nodes are. While it may seem that clustering coefficient is similar to density,  
 
-Mean distance: 
+Mean distance and Diameter: 
+Both of these measures are based on the term “geodesic”, which represents the shortest path between two given nodes.  Mean distance is an average of all possible geodesics in the graphs. 
+Diameter is the longest geodesic between two nodes in the graph.   
 
-
-Diameter: 
+References:
+Wasserman, S. and Faust, K., 1994. Social network analysis: Methods and applications.

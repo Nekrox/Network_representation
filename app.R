@@ -14,75 +14,19 @@ ui <- fluidPage(
   # extend shiny function browseURL so it can work in shinyapp.io
   shinyjs::useShinyjs(),
   extendShinyjs(text = js_code, functions = 'browseURL'),
-  
-  tags$head(
-    tags$style(HTML("
-      .navbar .navbar-nav { 
-                           color: #FFFFFF; 
-                           font-size: 22px; 
-                           background-color: #8675A9 ; } 
-      .navbar.navbar-default.navbar-static-top{ color: #8675A9; 
-                                      font-size: 38px; 
-                                      background-color: #8675A9;}
-      .navbar-default .navbar-brand { color: #000000; 
-                                      font-size: 30px; 
-                                      background-color: #8675A9 ;}
-      
-      /* Change text color of panels when hovered */
-      .navbar .navbar-nav > li > a:hover {
-        color: #FFFFFF; 
-      }
-        
-      /* Change text color of panels when not hovered */
-      .navbar-default .navbar-nav > li > a {
-        color: black;
-      }
-      
+  # Apply all tags from the tag_list in global
+  tags_list,
 
-    ")),
-   
-  ),
   navbarPage(
-    
-    tags$head(
-      tags$style(HTML('
-      p {font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; font-size: 20px;}
-    ')),
-      
-      # custom actionButton
-      tags$style(HTML("
-      .custom_button {
-        width: 200px;
-        background-color: #8675A9;
-        color: #FFFFFF;
-        border-color: #000000;
-        border-radius: 5px;
-        padding: 5px 10px;
-        font-size: 16px;
-        }
-       ")),
-      
-      tags$style(HTML(".small_margin_class {margin-bottom: 5px;}")),
-      
-      tags$style(
-        HTML(".text_custom_class {
-           color: black;
-           font-size: 24px;
-           font-style: normal;
-         }")
-      ),
-      
-      tags$style(HTML(".js-irs-0 .irs-single, .js-irs-0 .irs-bar-edge, 
-                      .js-irs-0 .irs-bar {background: #8675A9; border: #8675A9}")),
-      
-    ),
-    
+    title = "",
+    id = "navbar",
     tabPanel("General Info",
              
              fluidRow(
-               titlePanel("How to use this application"),
-               wellPanel(p(general_info_p))
-               
+                 wellPanel(div(
+                   HTML(instructions_html),
+                   style = "width: 100%; height: 100%; overflow-y: auto;"
+                 )),
              )
              
     ),
@@ -90,9 +34,9 @@ ui <- fluidPage(
     tabPanel("Nodal Degree",
              
              fluidRow(
-               
+               style = "margin: 20px; padding: 0px;",
                titlePanel("Nodal degree"),
-               helpText(HISTOGRAM_STR),
+               p(HISTOGRAM_STR),
                
                img(src = "nodal_histogram.png", width = "1200px", height = "600px"),
                titlePanel("Network visualization"),
@@ -100,48 +44,67 @@ ui <- fluidPage(
                sliderInput("percent_changed", "Select percentage", value = 10, 
                            step = 5, min = 5, max = 25, width = 700),
                actionButton("choose_percentage", "Simulate", class = "custom_button"),
-               uiOutput("network_ui_elements")
+               uiOutput("network_ui_elements", class = "big_margin_class"),
+               uiOutput("ego_centric_ui_elements")
+               
              ),
              
-             fluidRow(
-               uiOutput("ego_centric_ui_elements")
-             ) # end of fluid row
-       
     ), # end of second panel
     
     # THIRD PANEL
     tabPanel("Time frame",
-             
+             # CLEAN THE ENV
              fluidRow(
+               style = "margin: 20px; padding: 0px;",
                titlePanel("Network representation based on time frames"),
                wellPanel(p(time_info_p)),
-               selectInput("start_y_input", "Please select a start year:", 
-                           choices = 1593:1983),
-               selectInput("end_y_input", "Please select an end year:", 
-                           choices = NULL),
-               actionButton("time_frame_pressed", "Show my time frame", class = "custom_button"),
-               uiOutput("time_frame_elements")
+             fluidRow(
+                 column(width = 2,
+                   selectInput("start_y_input", "Please select a start year:", 
+                               choices = 1600:1983)
+                 ),
+                 column(width = 2,
+                   selectInput("end_y_input", "Please select an end year:", 
+                               choices = NULL)
+                 ),
+                 column(width = 2,
+                    div(
+                      actionButton("time_frame_pressed", "Show my time frame", class = "custom_button"),
+                      style = "margin-top: 14px;"
+                    )
+                 ),
+                 column(width = 6,
+                        
+                 )
+              ),
+               uiOutput("time_frame_elements", class = "med_margin_class")
                
              )
     ),
+    
   )
 )
 
 server <- shinyServer(function(input, output, session) {
   
   ind_selected_node <- reactiveVal(NULL)
+  show_nodal_network <- reactiveVal(TRUE)
+  show_tf_network <- reactiveVal(TRUE)
   
+  update_tf_network_trigger <- reactiveVal(FALSE)
+
   network_ui_elements <- eventReactive(input$choose_percentage, {
     # Create UI elements here
+    show_nodal_network(TRUE)
     decomposed_g <<- load_requested_data_based_on_percent(input$percent_changed)
-    # updateSelectInput(session, "selectInput_changed", choices = 1:length(decomposed_g))
-    
-    fluidRow(
-      style = "margin: 20px; padding: 0px;",
+    updateSelectInput(session, "selectInput_changed", choices = 1:length(decomposed_g))
+
+      fluidRow(
+      style = "margin: 1px; padding: 0px;",
       sidebarLayout(
         sidebarPanel(
           
-          helpText(div(paste0(PROMT_SUB_G_P1, length(decomposed_g), PROMT_SUB_G_P2), 
+          p(div(paste0(PROMT_SUB_G_P1, length(decomposed_g), PROMT_SUB_G_P2), 
                        style = "color: #888FF; font-size: 18px;")),
           
           selectInput("selectInput_changed", "Select a subgraph:", selected = 2, choices = 1:length(decomposed_g)),
@@ -149,39 +112,41 @@ server <- shinyServer(function(input, output, session) {
           # present statistics for the current sub graph
           h2(style = "color: #8675A9", "Network summary statistics:"),
           htmlOutput("current_sub_g_statistics", class = "text_custom_class"),
-          helpText("Explanation of every statistics can be found in general tab"),
+          p("Explanation of every statistics can be found in the general tab."),
+          
           
           # present node information and two buttons: link and egocentric network
           h2(style = "color: #8675A9", "Node information:"),
-          helpText(HELP_STR),
+          p(HELP_STR),
           htmlOutput("selected_node_info", class = "text_custom_class"),
-          uiOutput("personal_link_button", class = "small_margin_class"),
-          uiOutput("indv_net_pressed", class = "small_margin_class"),
-          uiOutput("node_info_ui_elements")
+          uiOutput("personal_link_button", class = "med_margin_class"),
+          uiOutput("indv_net_pressed", class = "med_margin_class"),
+          uiOutput("node_info_ui_elements"),
+          
         ), # End of the sidebarPanel 
         
         mainPanel(
-          div(style = "width: 600px; height: 600px; border: 2px solid purple;",
-              forceNetworkOutput("subgraph_network_viz", width = "600px", height = "600px")
+          div(style = "width: 100%; height: 100%; border: 2px solid purple;",
+              forceNetworkOutput("subgraph_network_viz", width = "100%", height = "800px")
           ),
           
         )
         
       )
     )
+    
   })
   
   ego_centric_ui_elements <- eventReactive(input$indv_net_pressed, {
     # When the "show ego centric" button is pressed, it activates the following code:
 
     fluidRow(
-      style = "margin: 0px; padding: 10px;",
+      style = "margin: 1px; padding: 10px;",
       sidebarLayout(
         sidebarPanel(
           h2(style = "color: #8675A9", "Egocentric network information:"),
           htmlOutput("selected_ind_info", class = "text_custom_class"),
-          
-          uiOutput("ind_personal_link_button")
+          uiOutput("ind_personal_link_button"),
           
         ),
         mainPanel(
@@ -196,40 +161,42 @@ server <- shinyServer(function(input, output, session) {
   })
   
   time_frame_elements <- eventReactive(input$time_frame_pressed, {
+    show_tf_network(TRUE)
     # Create UI elements here
-    time_frame_decomposed_g <<- time_frame_decomposed_creation(start_year, end_year)
+    time_frame_decomposed_g <<- time_frame_decomposed_creation(input$start_y_input, input$end_y_input)
     
     if (length(time_frame_decomposed_g) == 0) {
-      fluidRow(helpText(div(NO_DATA_STR), style = "color: #888FF; font-size: 18px;"))
+      fluidRow(p(NO_DATA_STR, style = "color: #F99417; font-size: 22px;"))
     } else {
       
       fluidRow(
-        # style = "margin: 20px; padding: 0px;",
+        style = "margin: 1px; padding: 0px;",
         sidebarLayout(
           sidebarPanel(
             
-            helpText(div(paste0(PROMT_SUB_G_P1, length(time_frame_decomposed_g), PROMT_SUB_G_P2), 
+            p(div(paste0(PROMT_SUB_G_P1, length(time_frame_decomposed_g), PROMT_SUB_G_P2), 
                          style = "color: #888FF; font-size: 18px;")),
         
-            selectInput("tf_g_number_selectI_changed", "Select a subgraph:", selected = 2, choices = 1:length(time_frame_decomposed_g)),
-
+            selectInput("tf_g_number_selectI_changed", "Select a subgraph:", choices = 1:length(time_frame_decomposed_g)),
             
+            update_tf_network_trigger(TRUE),
             
             # present statistics for the current sub graph
             h2(style = "color: #8675A9", "Network summary statistics:"),
             htmlOutput("current_sub_g_tf_statistics", class = "text_custom_class"),
-            helpText("Explanation of every statistics can be found in general tab"),
+            p("Explanation of every statistics can be found in general tab"),
             # present Node information
             h2(style = "color: #8675A9", "Node information:"),
-            helpText(HELP_STR),
+            p(HELP_STR),
             htmlOutput("selected_tf_node_info", class = "text_custom_class"),
-            uiOutput("time_personal_link_button", class = "small_margin_class"),
+            uiOutput("time_personal_link_button", class = "med_margin_class"),
+            
             
           ), # End of the sidebarPanel 
           
           mainPanel(
-            div(style = "width: 600px; height: 600px; border: 2px solid purple;",
-                forceNetworkOutput("time_frame_network_viz", width = "600px", height = "600px")
+            div(style = "width: 750px; height: 750px; border: 2px solid purple;",
+                forceNetworkOutput("time_frame_network_viz", width = "750px", height = "750px")
             ),
             
           )
@@ -240,6 +207,10 @@ server <- shinyServer(function(input, output, session) {
     }# end of else
     
   })# end of time frame event reactive
+  
+  
+  # EGOCENTRIC TIMEFRAME
+  
   
   output$network_ui_elements <- renderUI({
     network_ui_elements()
@@ -257,14 +228,12 @@ server <- shinyServer(function(input, output, session) {
   observeEvent(input$start_y_input, {
     start_year <<- as.integer(input$start_y_input)
     end_year <<- as.integer(input$start_y_input) + FIXED_INTERVAL
-    
     updateSelectInput(session, "end_y_input", choices = start_year:end_year)
   })
   
   # Obserbe changes in user input and change the label accordingly
   observeEvent(input$percent_changed, {
-    
-    updateSelectInput(session, "selectInput_changed", choices = 1:length(decomposed_g))
+    # updateSelectInput(session, "selectInput_changed", choices = 1:length(decomposed_g))
     label <- paste0("Select ", input$percent_changed, "% of data")
     updateActionButton(inputId = "choose_percentage", label = label)
   })  
@@ -316,22 +285,22 @@ server <- shinyServer(function(input, output, session) {
     })
     
     output$ind_personal_link_button <- renderUI({
-      
+  
       if (!is.null(ind_selected_node())) {
-        actionButton(
-          inputId = "ind_personal_link_button",
-          label = "Personal web-page",
-          icon = icon("link"),
-          class = "custom_button"
+        fluidRow(
+          style = "margin: 1px; padding: 0px;",
+          actionButton(
+            inputId = "ind_personal_link_button",
+            label = "Personal web-page",
+            icon = icon("link"),
+            class = "custom_button"
+          ),
+          helpText("Please make sure your browser does not block pop-up windows.")
         )
       }
-      
     })
     
-    
   }) # end of Observe click
-  
-  
   
   
   # Observe click on selected TIMEFRAME network and provide information on the node
@@ -353,7 +322,6 @@ server <- shinyServer(function(input, output, session) {
       )
     })
     
-    
   }) # end of Observe click 
   
   
@@ -363,10 +331,13 @@ server <- shinyServer(function(input, output, session) {
     script <- 'Shiny.onInputChange("node_clicked", d.name)'
     sj_list <- create_sj_object(as.integer(input$selectInput_changed))
     
-    forceNetwork(Links = sj_list$links, Nodes = sj_list$nodes, Source = "source",
-                 Target = "target", NodeID = "name", Group = "group", # linkColour = "#4ECCA3"
-                 opacity = 1, zoom = T, fontSize = 0, linkDistance = 350, clickAction = script
-    )
+    
+    if (show_nodal_network()) {
+      forceNetwork(Links = sj_list$links, Nodes = sj_list$nodes, Source = "source",
+                   Target = "target", NodeID = "name", Group = "group", # linkColour = "#4ECCA3"
+                   opacity = 1, zoom = T, fontSize = 0, linkDistance = 350, clickAction = script
+      )
+    }
     
   })
   
@@ -374,22 +345,36 @@ server <- shinyServer(function(input, output, session) {
   output$individual_network_viz <- renderForceNetwork({
 
     ind_script <- 'Shiny.onInputChange("ind_node_clicked", d.name)'
-    egocentricNetwork_func(as.integer(input$node_clicked),ind_script)
+    if (show_nodal_network()) {
+      egocentricNetwork_func(as.integer(input$node_clicked),ind_script)
+    }
     
   })
   
   # TIMEFRAME node Network plotting
   output$time_frame_network_viz <- renderForceNetwork({
-    
+ 
     sj_tf <- create_tf_sj_object(as.integer(input$tf_g_number_selectI_changed))
     tf_script <- 'Shiny.onInputChange("tf_node_clicked", d.name)'
     
-    forceNetwork(Links = sj_tf$links, Nodes = sj_tf$nodes, Source = "source",
-                 Target = "target", NodeID = "name", Group = "group",
-                 opacity = 1, zoom = T, fontSize = 0, linkDistance = 150, clickAction = tf_script
-    )
+    show_tf_network
+    if (show_tf_network()) {
+      forceNetwork(Links = sj_tf$links, Nodes = sj_tf$nodes, Source = "source",
+                   Target = "target", NodeID = "name", Group = "group",
+                   opacity = 1, zoom = T, fontSize = 0, linkDistance = 150, clickAction = tf_script
+      )
+    }
   })
   
+  # Individual TIME FRAME Network plotting
+  # output$individual_time_frame_viz <- renderForceNetwork({
+  #   
+  #   ind_tf_script <- 'Shiny.onInputChange("XXXXXXXX", d.name)'
+  #   if (show_tf_network()) {
+  #     egocentricNetwork_func(as.integer(input$tf_node_clicked),ind_tf_script)
+  #   }
+  #   
+  # })
   
   # =======================OBSERVE ELEMNTS RESPONSIBLE FOR LINKS OPENNING=====================================   
   
@@ -416,22 +401,40 @@ server <- shinyServer(function(input, output, session) {
   output$current_sub_g_tf_statistics <- renderText({ 
     present_network_stat_func(as.integer(input$tf_g_number_selectI_changed), time_frame_decomposed_g)
   })
+  # =======================OTHER ELEMNTS=======================================
+  output$my_text <- renderUI({
+    display_text_func()
+  })
   
+  observe({
+    if (update_tf_network_trigger()) {
+      updateSelectInput(session, "tf_g_number_selectI_changed", selected = 2)
+      update_tf_network_trigger(FALSE)
+    }
+  })
+  
+ 
+  # Track which tav is selected. 
+  observe({
+    if (req(input$navbar) == "General Info") {
+      gc()
+    }
+
+    if (req(input$navbar) == "Nodal Degree") {
+      gc()
+      show_tf_network(FALSE)
+    }
+
+    if (req(input$navbar) == "Time frame") {
+      gc()
+      show_nodal_network(FALSE)
+    }
+
+
+  })
   
 })
-shinyApp(ui, server) 
+shinyApp(ui, server)
 
-
-
-
-
-
-
-
-
-
-  
-  
-  
 
 

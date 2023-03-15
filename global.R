@@ -1,6 +1,8 @@
 # Load requested data by the user
-setwd("~/Desktop/FYP_Project/Shiny/FYP_app/application_data")
 
+
+# load_my_data <- function() {
+setwd("~/Desktop/FYP_Project/Shiny/FYP_app/application_data")
 full_data_set <- read.csv(file = 'combined_data.csv')
 full_edge_list <- read.csv(file = 'upd_full_edge_list.csv')
 edge_list_5p <- read.csv(file = 'edge_list_deg_85+.csv')
@@ -23,11 +25,9 @@ represent a network. Please select another timeline."
 HISTOGRAM_STR <- "Histogram below represents the distribution of nodal degrees for the entire data, 
 which accounts for 40,000 unique entries."
 
+decomposed_g <- decompose.graph(graph_from_data_frame(edge_list_10p, directed = FALSE, vertices = NULL))
 
 FIXED_INTERVAL <- 10
-# Loading text files for the app
-general_info_p <- paste(readLines("general_p_text.txt"), collapse = "\n")
-time_info_p <- paste(readLines("time_text.txt"), collapse = "\n")
 # define js function for opening urls in new tab/window
 js_code <- "
 shinyjs.browseURL = function(url) {
@@ -35,15 +35,73 @@ shinyjs.browseURL = function(url) {
 }
 " 
 
-decomposed_g <- decompose.graph(graph_from_data_frame(edge_list_10p, directed = FALSE, vertices = NULL))
+# Loading text files for the app
 
+instructions_html <- readLines("html_code.html")
 
-# data for the histogram and plot configuration 
-full_graph <- graph_from_data_frame(full_edge_list, directed = FALSE, vertices = NULL)
-nodal_degree <- degree(full_graph)
-degrees_as_df <- as.data.frame(nodal_degree)
-nodal_d_df <- as.data.frame(table(degrees_as_df$nodal_degree))
+time_info_p <- paste(readLines("time_text.txt"), collapse = "\n")
 
+# ================================TAG_LIST==========================================
+tags_list <- tagList(
+  # tag responsible for navbar customization
+  tags$style(HTML("
+      .navbar .navbar-nav { 
+                           color: #FFFFFF; 
+                           font-size: 22px; 
+                           background-color: #8675A9 ; } 
+      .navbar.navbar-default.navbar-static-top{ color: #8675A9; 
+                                      font-size: 38px; 
+                                      background-color: #8675A9;}
+      .navbar-default .navbar-brand { color: #000000; 
+                                      font-size: 30px; 
+                                      background-color: #8675A9 ;}
+      
+      /* Change text color of panels when hovered */
+      .navbar .navbar-nav > li > a:hover {
+        color: #FFFFFF; 
+      }
+        
+      /* Change text color of panels when not hovered */
+      .navbar-default .navbar-nav > li > a {
+        color: black;
+      }
+    
+    ")),
+  
+  tags$style(HTML('
+      p {font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; font-size: 20px;}
+    ')),
+  # tag responsible for all buttons customization
+  tags$style(HTML("
+      .custom_button {
+        width: 220px;
+        height: 45px;
+        background-color: #8675A9;
+        color: #FFFFFF;
+        border-color: #000000;
+        border-radius: 5px;
+        padding: 5px 10px;
+        font-size: 18px;
+        }
+       ")),
+  # two tags for margins
+  tags$style(HTML(".small_margin_class {margin-bottom: 5px;}")),
+  tags$style(HTML(".med_margin_b_class {margin-bottom: 20px;}")),
+  tags$style(HTML(".med_margin_class {margin-top: 20px;}")),
+  tags$style(HTML(".big_margin_class {margin-top: 40px;}")),
+  # custom text tag
+  tags$style(
+    HTML(".text_custom_class {
+           color: black;
+           font-size: 24px;
+           font-style: normal;
+         }")
+  ),
+  
+  tags$style(HTML(".js-irs-0 .irs-single, .js-irs-0 .irs-bar-edge, 
+                      .js-irs-0 .irs-bar {background: #8675A9; border: #8675A9}"))
+)
+# ================================FUNCTIONS==========================================
 load_requested_data_based_on_percent <- function(selected_percent) {
   
   if (selected_percent == 5) {
@@ -77,19 +135,6 @@ create_sj_object <- function(sub_gr_number) {
   return(my_sj_list)
 }
 
-# create_sj_indiv <- function(selected_node_id) {
-# 
-#   egocentric_edge_l = full_edge_list[which(full_edge_list[,1] == selected_node_id),]
-#   # create a data frame for individual network representation 
-#   indv_unq_n <- unique(c(egocentric_edge_l$A, egocentric_edge_l$B))
-#   selected_indv_n_df <<- full_data_set[full_data_set$node.ID %in% indv_unq_n,]
-#   
-#   g_o <- graph_from_data_frame(egocentric_edge_l, directed = FALSE, vertices = NULL)
-#   m <- membership(cluster_walktrap(g_o, steps = 1))
-#   indv_sj_list <- igraph_to_networkD3(g_o, group = m)
-#   return(indv_sj_list)
-# }
-
 time_frame_decomposed_creation <- function(st_y, end_y) {
   
   selected_tf_df <<- subset(updt_full_data, event.start.date >= st_y & event.start.date <= end_y)
@@ -115,9 +160,8 @@ time_frame_decomposed_creation <- function(st_y, end_y) {
   
 } 
 
-
 create_tf_sj_object <- function(tf_sub_gr_number) {
-  
+
   current_tf_subgraph <- time_frame_decomposed_g[[tf_sub_gr_number]]
   tf_members <- membership(cluster_walktrap(current_tf_subgraph, steps = 1))
   tf_sj_list <- igraph_to_networkD3(current_tf_subgraph, group = tf_members)
@@ -134,7 +178,7 @@ nodeOnClickInfo_func <- function(information_object) {
 
 
 present_network_stat_func <- function(current_sub_g_n, decom_object) {
-  # print(current_sub_g_n)
+
   current_c_subgraph <- decom_object[[current_sub_g_n]]
   
   density_v <- sprintf("%.2f", graph.density(current_c_subgraph))
@@ -157,16 +201,23 @@ present_network_stat_func <- function(current_sub_g_n, decom_object) {
 }
 
 egocentricNetwork_func <- function(selected_node_id, given_script) {
-  
-
+  # first I create the needed edge list, which is "ego_centric_edge_list"
   egocentric_edge_l = full_edge_list[which(full_edge_list[,1] == selected_node_id),]
   # create a data frame for individual network representation
   indv_unq_n <- unique(c(egocentric_edge_l$A, egocentric_edge_l$B))
   selected_indv_n_df <<- full_data_set[full_data_set$node.ID %in% indv_unq_n,]
+  other_e_nodes_edge_l <- full_edge_list[full_edge_list$A %in% egocentric_edge_l$B 
+                                         & full_edge_list$B %in% egocentric_edge_l$B,]
+  
+  ego_centric_edge_list <- rbind(egocentric_edge_l,other_e_nodes_edge_l)
+  # then I use this ego_centric_edge_list to create an igraph object and
+  # transform it to a suitable indv_sj_list for the forceNetwork. 
+  # I cant center it, but there is a solution in one link, which I saved in notion.
 
-  g_o <- graph_from_data_frame(egocentric_edge_l, directed = FALSE, vertices = NULL)
+  g_o <- graph_from_data_frame(ego_centric_edge_list, directed = FALSE, vertices = NULL)
   m <- membership(cluster_walktrap(g_o, steps = 1))
   indv_sj_list <- igraph_to_networkD3(g_o, group = m)
+  indv_sj_list$nodes$group[1] <- 100 # sets the ego node to a unique color  
   
   current_script <- given_script
   
@@ -175,8 +226,11 @@ egocentricNetwork_func <- function(selected_node_id, given_script) {
                opacity = 1, zoom = T, fontSize = 0, linkDistance = 150, clickAction = current_script
   )
   
+} 
   
+display_text_func <- function() { 
+  return(HTML(paste("<blockquote>", text, "</blockquote>", collapse = "\n")))
+  }
   
-}
 
 
